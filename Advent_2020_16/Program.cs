@@ -7,13 +7,20 @@ namespace Advent_2020_16
         static void Main(string[] args)
         {
             string dataPath = "exampleData.txt";
-            var limits = parseData(dataPath);
-            //limits.Sort((a,b) => a.Value.CompareTo(b.Value));
-            foreach (var limit in limits) {
-                Console.WriteLine($"{limit.StartValue} - {limit.EndValue}");
-            }
+            var tickets = ParseTickets(dataPath);
+            var limits = ParseLimits(dataPath);
+            var validTickets = GetValidTickets(tickets, limits);
         }
 
+        static List<Ticket> GetValidTickets(List<Ticket> tickets, List<Limit> limits)
+        {
+            var result = new List<Ticket>();
+            foreach (var ticket in tickets)
+            {
+                // TODO
+            }
+            return result;
+        }
         struct Limit
         {
             public int StartValue;
@@ -26,7 +33,37 @@ namespace Advent_2020_16
             }
         }
 
-        static List<Limit> parseData(string dataPath) {
+        class Ticket
+        {
+            public List<int> Fields;
+            public Ticket(List<int> fields) { 
+                Fields = fields;
+            }
+            public bool CheckValidity(List<Limit> limits)
+            {
+                return true;
+            }
+        }
+
+        static List<Ticket> ParseTickets(string dataPath)
+        {
+            var tickets = new List<Ticket>();
+            string input = File.ReadAllText(dataPath);
+            string splitInput = input.Split("nearby tickets:")[1].TrimStart();
+            string[] lines = splitInput.Split('\n');
+            foreach (string line in lines)
+            {
+                var fields = new List<int>();
+                string pattern = @"\d+";
+                var matches = Regex.Matches(line, pattern);
+                foreach (Match match in matches) {
+                    fields.Add(int.Parse(match.Value));
+                }
+                tickets.Add(new Ticket(fields));
+            }
+            return tickets;
+        }
+        static List<Limit> ParseLimits(string dataPath) {
             var result = new List<Limit>();
             string input = File.ReadAllText(dataPath);
             string pattern = @"(?'from1'\d+)-(?'to1'\d+) or (?'from2'\d+)-(?'to2'\d+)";
