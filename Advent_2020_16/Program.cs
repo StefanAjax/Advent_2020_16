@@ -37,7 +37,8 @@ namespace Advent_2020_16
                             break;
                         }
                     }
-                    if (!fieldIsValid) result += field;                }
+                    if (!fieldIsValid) result += field;
+                }
             }
 
             return result;
@@ -57,7 +58,7 @@ namespace Advent_2020_16
                     endValue = input[i + 1].EndValue;
                     i++;
                 }
-                result.Add(new Limit(startValue, endValue));
+                result.Add(new Limit("???", startValue, endValue));
             }
             return result;
         }
@@ -85,13 +86,15 @@ namespace Advent_2020_16
         }
         struct Limit
         {
+            public string FieldName;
             public int StartValue;
             public int EndValue;
 
-            public Limit (int startValue, int endValue)
+            public Limit (string fieldName, int startValue, int endValue)
             {
                 StartValue = startValue;
                 EndValue = endValue;
+                FieldName = fieldName;
             }
         }
 
@@ -128,13 +131,13 @@ namespace Advent_2020_16
         static List<Limit> ParseLimits(string dataPath) {
             var result = new List<Limit>();
             string input = File.ReadAllText(dataPath);
-            string pattern = @"(?'from1'\d+)-(?'to1'\d+) or (?'from2'\d+)-(?'to2'\d+)";
+            string pattern = @"/(?'fieldname'\w+): (?'from1'\d+)-(?'to1'\d+) or (?'from2'\d+)-(?'to2'\d+)";
             var rg = new Regex(pattern, RegexOptions.Multiline);
             var matches = rg.Matches(input);
             foreach (Match match in matches) {
                 if (match.Success) {
-                    result.Add(new Limit(int.Parse(match.Groups["from1"].Value), int.Parse(match.Groups["to1"].Value)));
-                    result.Add(new Limit(int.Parse(match.Groups["from2"].Value), int.Parse(match.Groups["to2"].Value)));
+                    result.Add(new Limit(match.Groups["fieldname"].Value, int.Parse(match.Groups["from1"].Value), int.Parse(match.Groups["to1"].Value)));
+                    result.Add(new Limit(match.Groups["fieldname"].Value, int.Parse(match.Groups["from2"].Value), int.Parse(match.Groups["to2"].Value)));
                 }
             }
             return result;
