@@ -9,13 +9,46 @@ namespace Advent_2020_16
             string dataPath = "trueData.txt";
             var tickets = ParseTickets(dataPath);
             var limits = ParseLimits(dataPath);
-            limits.Sort((a,b) => a.StartValue.CompareTo(b.StartValue));
+
+            // Part 1
             var consolidatedLimits = ConsolidateLimits(limits);
-            var validTickets = GetValidTickets(tickets, consolidatedLimits);
             int ticketScanningErrorRate = GetTicketErrorScanningRate(tickets, consolidatedLimits);
-            
             Console.WriteLine($"Ticket Scanning Error Rate: {ticketScanningErrorRate}");
-            Console.WriteLine($"Number of tickets: {tickets.Count}, number of valid tickets: {validTickets.Count}");
+
+
+            // Part 2
+            var validTickets = GetValidTickets(tickets, consolidatedLimits);
+            
+                        
+        }
+
+        static List<string> GetFieldNamesInOrder(List<Ticket> validTickets, List<Limit> limits)
+        {
+            var result = new List<string>();
+            var fieldNames = GetFieldNamesFromLimits(limits);
+            
+
+
+            return result;
+        }
+
+        static List<string> GetFieldNamesFromLimits(List<Limit> limits)
+        {
+            var result = new List<string>();
+            foreach (var limit in limits) 
+            { 
+                if (!result.Contains(limit.FieldName)) result.Add(limit.FieldName);
+            }
+            return result;
+        }
+
+        static List<Limit> GetLimitsByFieldName(string fieldName, List<Limit> limitsInput)
+        {
+            List<Limit> result = new List<Limit>();
+            foreach (var limit in limitsInput) {
+                if (limit.FieldName == fieldName) result.Add(limit);    
+            }
+            return result;
         }
 
         static int GetTicketErrorScanningRate(List<Ticket> tickets, List<Limit> consolidatedLimits)
@@ -47,7 +80,7 @@ namespace Advent_2020_16
         static List<Limit> ConsolidateLimits(List<Limit> input)
         {
             var result = new List<Limit>();
-
+            input.Sort((a, b) => a.StartValue.CompareTo(b.StartValue));
 
             for (int i = 0; i < input.Count; i++)
             {
@@ -73,7 +106,7 @@ namespace Advent_2020_16
                 {
                     foreach (var limit in limits)
                     {
-                        if (field >= limit.StartValue && field <= limit.EndValue)
+                        if (limit.IsWithinLimit(field))
                         {
                             validFieldsCount++;
                             break;
@@ -95,6 +128,12 @@ namespace Advent_2020_16
                 StartValue = startValue;
                 EndValue = endValue;
                 FieldName = fieldName;
+            }
+
+            public bool IsWithinLimit(int input)
+            {
+                if (input >= StartValue && input <= EndValue) return true;
+                else return false;
             }
         }
 
@@ -131,7 +170,7 @@ namespace Advent_2020_16
         static List<Limit> ParseLimits(string dataPath) {
             var result = new List<Limit>();
             string input = File.ReadAllText(dataPath);
-            string pattern = @"(?'fieldname'\w+): (?'from1'\d+)-(?'to1'\d+) or (?'from2'\d+)-(?'to2'\d+)";
+            string pattern = @"(?'fieldname'[a-z, ]+): (?'from1'\d+)-(?'to1'\d+) or (?'from2'\d+)-(?'to2'\d+)";
             var rg = new Regex(pattern, RegexOptions.Multiline);
             var matches = rg.Matches(input);
             foreach (Match match in matches) {
