@@ -131,7 +131,7 @@ namespace Advent_2020_16
         static List<Limit> ParseLimits(string dataPath) {
             var result = new List<Limit>();
             string input = File.ReadAllText(dataPath);
-            string pattern = @"/(?'fieldname'\w+): (?'from1'\d+)-(?'to1'\d+) or (?'from2'\d+)-(?'to2'\d+)";
+            string pattern = @"(?'fieldname'\w+): (?'from1'\d+)-(?'to1'\d+) or (?'from2'\d+)-(?'to2'\d+)";
             var rg = new Regex(pattern, RegexOptions.Multiline);
             var matches = rg.Matches(input);
             foreach (Match match in matches) {
