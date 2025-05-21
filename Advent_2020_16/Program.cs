@@ -6,18 +6,80 @@ namespace Advent_2020_16
     {
         static void Main(string[] args)
         {
-            string dataPath = "exampleData.txt";
+            string dataPath = "trueData.txt";
             var tickets = ParseTickets(dataPath);
             var limits = ParseLimits(dataPath);
-            var validTickets = GetValidTickets(tickets, limits);
+            limits.Sort((a,b) => a.StartValue.CompareTo(b.StartValue));
+            var consolidatedLimits = ConsolidateLimits(limits);
+            var validTickets = GetValidTickets(tickets, consolidatedLimits);
+            int ticketScanningErrorRate = GetTicketErrorScanningRate(tickets, consolidatedLimits);
+            
+            Console.WriteLine($"Ticket Scanning Error Rate: {ticketScanningErrorRate}");
+            Console.WriteLine($"Number of tickets: {tickets.Count}, number of valid tickets: {validTickets.Count}");
+        }
+
+        static int GetTicketErrorScanningRate(List<Ticket> tickets, List<Limit> consolidatedLimits)
+        {
+            int result = 0;
+
+
+            foreach (var ticket in tickets)
+            {
+                int fieldCount = ticket.Fields.Count;
+                foreach (var field in ticket.Fields)
+                {
+                    bool fieldIsValid = false;
+                    foreach (var limit in consolidatedLimits)
+                    {
+                        if (field >= limit.StartValue && field <= limit.EndValue)
+                        {
+                            fieldIsValid = true;
+                            break;
+                        }
+                    }
+                    if (!fieldIsValid) result += field;                }
+            }
+
+            return result;
+        }
+        
+        static List<Limit> ConsolidateLimits(List<Limit> input)
+        {
+            var result = new List<Limit>();
+
+
+            for (int i = 0; i < input.Count; i++)
+            {
+                int startValue = input[i].StartValue;
+                int endValue = input[i].EndValue;   
+                while (i+1<input.Count && input[i + 1].StartValue <= input[i].EndValue + 1)
+                {
+                    endValue = input[i + 1].EndValue;
+                    i++;
+                }
+                result.Add(new Limit(startValue, endValue));
+            }
+            return result;
         }
 
         static List<Ticket> GetValidTickets(List<Ticket> tickets, List<Limit> limits)
         {
             var result = new List<Ticket>();
-            foreach (var ticket in tickets)
-            {
-                // TODO
+            foreach (var ticket in tickets) {
+                int fieldCount = ticket.Fields.Count;
+                int validFieldsCount = 0;
+                foreach (var field in ticket.Fields)
+                {
+                    foreach (var limit in limits)
+                    {
+                        if (field >= limit.StartValue && field <= limit.EndValue)
+                        {
+                            validFieldsCount++;
+                            break;
+                        }
+                    }
+                }
+                if (validFieldsCount == fieldCount) result.Add(ticket);
             }
             return result;
         }
@@ -75,7 +137,6 @@ namespace Advent_2020_16
                     result.Add(new Limit(int.Parse(match.Groups["from2"].Value), int.Parse(match.Groups["to2"].Value)));
                 }
             }
-
             return result;
         }
     }
