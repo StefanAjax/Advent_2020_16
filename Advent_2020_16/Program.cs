@@ -9,6 +9,7 @@ namespace Advent_2020_16
             string dataPath = "trueData.txt";
             var tickets = ParseTickets(dataPath);
             var limits = ParseLimits(dataPath);
+            int[] myTicket = new int[] { 179, 101, 223, 107, 127, 211, 191, 61, 199, 193, 181, 131, 89, 109, 197, 59, 227, 53, 103, 97 };
 
             // Part 1
             var consolidatedLimits = ConsolidateLimits(limits);
@@ -18,17 +19,96 @@ namespace Advent_2020_16
 
             // Part 2
             var validTickets = GetValidTickets(tickets, consolidatedLimits);
-            
-                        
+            var fieldNames = GetFieldNamesFromLimits(limits);
+            var possibleFieldNames = GeneratePossibleFieldNames(fieldNames);
+            possibleFieldNames = RemovePossibleFieldnamesOutsideOfRanges(possibleFieldNames, validTickets, limits);
+            var resolvedFields = ResolveFieldsByDeduction(possibleFieldNames);
+
+
+            // Calculate result
+            long result = 1;
+            for (int i=0; i<resolvedFields.Length; i++)
+            {
+                if (resolvedFields[i].StartsWith("departure"))
+                {
+                    result *= myTicket[i];
+                }
+            }
+            Console.WriteLine($"Part 2 result = {result}");
         }
 
-        static List<string> GetFieldNamesInOrder(List<Ticket> validTickets, List<Limit> limits)
+        static string[] ResolveFieldsByDeduction(List<List<String>> possibleFieldNames)
         {
-            var result = new List<string>();
-            var fieldNames = GetFieldNamesFromLimits(limits);
-            
+            var result = new string[possibleFieldNames.Count];
+            while (possibleFieldNames.Any(p => p.Count > 1))
+            {
+                for (int i = 0; i < possibleFieldNames.Count; i++)
+                {
+                    if (possibleFieldNames[i].Count == 1)
+                    {
+                        result[i] = possibleFieldNames[i][0];
+                        for (int j = 0; j < possibleFieldNames.Count; j++)
+                        {
+                            if (i != j)
+                            {
+                                possibleFieldNames[j].Remove(result[i]);
+                            }
+                        }
+                    }
+                }
+            }
+            for (int i = 0; i < possibleFieldNames.Count; i++)
+            {
+                if (possibleFieldNames[i].Count == 1)
+                {
+                    result[i] = possibleFieldNames[i][0];
+                }
+            }
+            return result;
+        }
+        static List<List<String>> RemovePossibleFieldnamesOutsideOfRanges(List<List<String>> possibleFieldNames, List<Ticket> validTickets, List<Limit> limits)
+        {
+            for (int ticketIndex = 0; ticketIndex < validTickets.Count; ticketIndex++)
+            {
+                var ticket = validTickets[ticketIndex];
 
+                for (int i = 0; i < ticket.Fields.Count; i++)
+                {
+                    int currentField = ticket.Fields[i];
+                    var toRemove = new List<string>();
 
+                    foreach (var fieldName in possibleFieldNames[i]) // iterate over possible field names for this position
+                    {
+                        var currentLimits = GetLimitsByFieldName(fieldName, limits);
+                        bool isInRange1 = currentLimits[0].StartValue <= currentField && currentLimits[0].EndValue >= currentField;
+                        bool isInRange2 = currentLimits[1].StartValue <= currentField && currentLimits[1].EndValue >= currentField;
+                        if (!(isInRange1 || isInRange2))
+                        {
+                            toRemove.Add(fieldName); // mark for removal
+                        }
+                    }
+
+                    foreach (var fieldName in toRemove)
+                    {
+                        possibleFieldNames[i].Remove(fieldName); // safe to remove now
+                    }
+                }
+            }
+
+            return possibleFieldNames;
+        }
+
+        static List<List<String>> GeneratePossibleFieldNames(List<String> fieldNames)
+        {
+            var result = new List<List<String>>();
+            for (int i = 0; i < fieldNames.Count; i++)
+            {
+                result.Add(new List<string>());
+                foreach (var fieldName2 in fieldNames)
+                {
+                    result[i].Add(fieldName2);
+                }
+            }
             return result;
         }
 
@@ -98,6 +178,7 @@ namespace Advent_2020_16
 
         static List<Ticket> GetValidTickets(List<Ticket> tickets, List<Limit> limits)
         {
+            limits.Sort((a, b) => a.StartValue.CompareTo(b.StartValue));
             var result = new List<Ticket>();
             foreach (var ticket in tickets) {
                 int fieldCount = ticket.Fields.Count;
@@ -117,7 +198,7 @@ namespace Advent_2020_16
             }
             return result;
         }
-        struct Limit
+        class Limit
         {
             public string FieldName;
             public int StartValue;
@@ -142,10 +223,6 @@ namespace Advent_2020_16
             public List<int> Fields;
             public Ticket(List<int> fields) { 
                 Fields = fields;
-            }
-            public bool CheckValidity(List<Limit> limits)
-            {
-                return true;
             }
         }
 
