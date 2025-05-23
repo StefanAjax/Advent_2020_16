@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace Advent_2020_16
 {
@@ -7,36 +8,37 @@ namespace Advent_2020_16
         static void Main(string[] args)
         {
             string dataPath = "trueData.txt";
-            var tickets = ParseTickets(dataPath);
-            var limits = ParseLimits(dataPath);
-            int[] myTicket = new int[] { 179, 101, 223, 107, 127, 211, 191, 61, 199, 193, 181, 131, 89, 109, 197, 59, 227, 53, 103, 97 };
+            List<Ticket> tickets = ParseTickets(dataPath);
+            List<Limit> limits = ParseLimits(dataPath);
+            var myTicket = new Ticket(new List<int>() { 179, 101, 223, 107, 127, 211, 191, 61, 199, 193, 181, 131, 89, 109, 197, 59, 227, 53, 103, 97 });
 
             // Part 1
-            var consolidatedLimits = ConsolidateLimits(limits);
+            List<Limit> consolidatedLimits = ConsolidateLimits(limits);
             int ticketScanningErrorRate = GetTicketErrorScanningRate(tickets, consolidatedLimits);
             Console.WriteLine($"Ticket Scanning Error Rate: {ticketScanningErrorRate}");
 
-
             // Part 2
-            var validTickets = GetValidTickets(tickets, consolidatedLimits);
-            var fieldNames = GetFieldNamesFromLimits(limits);
-            var possibleFieldNames = GeneratePossibleFieldNames(fieldNames);
+            List<Ticket> validTickets = GetValidTickets(tickets, consolidatedLimits);
+            List<String> fieldNames = GetFieldNamesFromLimits(limits);
+            List<List<String>> possibleFieldNames = GeneratePossibleFieldNames(fieldNames);
             possibleFieldNames = RemovePossibleFieldnamesOutsideOfRanges(possibleFieldNames, validTickets, limits);
-            var resolvedFields = ResolveFieldsByDeduction(possibleFieldNames);
-
-
-            // Calculate result
-            long result = 1;
-            for (int i=0; i<resolvedFields.Length; i++)
-            {
-                if (resolvedFields[i].StartsWith("departure"))
-                {
-                    result *= myTicket[i];
-                }
-            }
+            string[] resolvedFields = ResolveFieldsByDeduction(possibleFieldNames);
+            long result = CalculateResults(myTicket, resolvedFields);
             Console.WriteLine($"Part 2 result = {result}");
         }
 
+        static long CalculateResults(Ticket myTicket, string[] resolvedFields)
+        {
+            long result = 1;
+            for (int i = 0; i < resolvedFields.Length; i++)
+            {
+                if (resolvedFields[i].StartsWith("departure"))
+                {
+                    result *= myTicket.Fields[i];
+                }
+            }
+            return result;
+        }
         static string[] ResolveFieldsByDeduction(List<List<String>> possibleFieldNames)
         {
             var result = new string[possibleFieldNames.Count];
